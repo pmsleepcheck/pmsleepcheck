@@ -51,7 +51,7 @@
   <div id="log"></div>
   <script>
     var pmType=["食材型","樹果型","技能型"]
-    var pmCharacter=["怕寂寞","固執","頑皮","勇敢","大膽","坦率","淘氣","樂天","悠閒","內斂","慢吞吞","害羞","馬虎","冷靜","溫和","溫順","慎重","浮躁","自大","膽小","急躁","爽朗","天真","認真"]
+    var pmCharacter=["怕寂寞","固執","頑皮","勇敢","大膽","坦率","淘氣","樂天","悠閒","內斂","慢吞吞","害羞","馬虎","冷靜","溫和","溫順","慎重","浮躁","自大","膽小","急躁","爽朗","天真","認真","勤奮"]
     var pmCharacterT0=["怕寂寞","固執","頑皮","勇敢"]
     var pmCharacterT0Berry=["怕寂寞","固執","頑皮","勇敢","淘氣","爽朗","慎重"]
     //负面性格
@@ -256,7 +256,7 @@ var skillsT1BerryBan = ["食材機率提升M", "食材機率提升S"]
 
         await worker.initialize(lang);
         //   const { data: { text } } = await worker.recognize(cans);//tessedit_pageseg_mode :'11',tessedit_pageseg_mode :'11', 
-        await worker.setParameters({ preserve_interword_spaces: 1, tessedit_char_whitelist: "怕寂寞固執頑皮勇敢大膽坦率淘氣樂天悠閒內斂慢吞吞害羞馬虎冷靜溫和溫順慎重浮躁自大膽小急躁爽朗天真認真獎勵活力回復提升睡眠EXP幫手獎勵能力詳情數量持有上限提升坦率lvSLM123456789技能等級概率樹果食材提升性格固執幫忙速度機率" })//,
+        await worker.setParameters({ preserve_interword_spaces: 1, tessedit_char_whitelist: "怕寂寞固執頑皮勇敢大膽坦率淘氣樂天悠閒內斂慢吞吞害羞馬虎冷靜溫和溫順慎重勤奮浮躁自大膽小急躁爽朗天真認真獎勵活力回復提升睡眠EXP幫手獎勵能力詳情數量持有上限提升坦率lvSLM123456789技能等級概率樹果食材提升性格固執幫忙速度機率" })//,
         const data = await worker.recognize(cans);
         await worker.terminate();
         // console.log(text);
