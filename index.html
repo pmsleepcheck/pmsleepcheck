@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+  评级解释：
+  https://nga.178.com/read.php?tid=37408232
+  <div>類型<select id="pmType"> 
+  </select> 
+  </div>
+  <div >技能</div>
+  <div><select id="sk10" > 
+  </select> 
+  <select id="sk25"  > 
+  </select>
+</div>
+<div><select id="sk50"  > 
+</select> 
+<select id="sk75"  > 
+</select>
+</div>
+<div><select id="sk100"  > 
+</select> 
+
+</div>
+
+</div>
+<div>性格<select id="pmCharacter"> 
+</select> 
+<button onclick="classCheck()">判定等级</button>
+<h1 id="result"></h1>
+
+<br/>
+</div>
+<div>识别例图</div>
+  
+  <img src="simple.jpg" id="sample" height="400" />
+
+  </div>
+  <canvas id="canvas" height="400"></canvas>
+  <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
+  <select id="langsel">
+    <option value='chi_tra'> Traditional Chinese </option>
+  </select>
+  
+  <!--<button onclick="recognizeFile(document.querySelector('#sample'))">Sample Image</button>-->
+  <input type="file">
+  <div id="log"></div>
+  <script>
+    var pmType=["食材型","樹果型","技能型"]
+    var pmCharacter=["怕寂寞","固執","頑皮","勇敢","大膽","坦率","淘氣","樂天","悠閒","內斂","慢吞吞","害羞","馬虎","冷靜","溫和","溫順","慎重","浮躁","自大","膽小","急躁","爽朗","天真","認真"]
+    var pmCharacterT0=["怕寂寞","固執","頑皮","勇敢"]
+    var pmCharacterT0Berry=["怕寂寞","固執","頑皮","勇敢","淘氣","爽朗","慎重"]
+    //负面性格
+    var pmCharacterNegative=["內斂","溫和", "大膽","膽小"]
+    var pmCharacterNegativeBerry=["內斂","溫和", "大膽","膽小","慢吞吞","馬虎","馬虎","冷靜"]
+    var skills = ["樹果數量S", "夢之碎片獎勵", "活力回復獎勵", "活力回復提升M", "活力回復提升S", "睡眠EXP獎勵", "幫忙速度M", "幫忙速度S", "幫手獎勵", "食材機率提升M", "食材機率提升S", "持有上限提升L", "持有上限提升M", "持有上限提升S", "技能機率提升M", "技能機率提升S", "研究EXP獎勵", "技能等級提升M", "技能等級提升S"]
+
+var skillsT0 = ["樹果數量S", "幫手獎勵"]
+var skillsT1Berry = ["樹果數量S", "幫手獎勵", "活力回復獎勵"]
+var skillsT1Food = ["食材機率提升M", "持有上限提升L", "持有上限提升M", "幫忙速度M", "活力回復獎勵"]
+var skillsT1Skill = ["幫忙速度M", "技能機率提升M", "活力回復獎勵"]
+
+var skillsT1BerryBan = ["食材機率提升M", "食材機率提升S"]
+
+ 
+
+
+
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const inputFile = document.querySelector("input[type=file]");
+
+    var obj=document.getElementById("sk10");
+
+    addOptSk(document.getElementById("sk10"))
+    addOptSk(document.getElementById("sk25"))
+    addOptSk(document.getElementById("sk50"))
+    addOptSk(document.getElementById("sk75"))
+    addOptSk(document.getElementById("sk100"))
+    addOptSk(document.getElementById("sk100"))
+    addOpt(document.getElementById("pmType"),pmType)
+    addOpt(document.getElementById("pmCharacter"),pmCharacter)
+  function addOptSk(selectSk){ 
+    addOpt( selectSk,skills)
+  }
+  function addOpt(selectSk,ops){
+         for(var i=0;i<ops.length;i++){
+             // document.form1.sel.options[i]=new Option (arr[i],i)
+            var opt=document.createElement('option')
+             opt.text=ops[i]
+             opt.value=ops[i];
+             selectSk.add(opt,undefined)
+        } 
+  }
+
+
+
+    inputFile.onchange = (event) => {
+      const files = event.target.files;
+      if (files.length > 0) {
+        const file = files[0]; // First file
+        console.log(file);
+
+        const image = new Image();
+        image.src = URL.createObjectURL(file);
+
+        image.onload = function (event) {
+          // console.log(event, this);
+          URL.revokeObjectURL(this.src);
+
+          canvas.width = image.width;
+          canvas.height = image.height;
+
+          ctx.drawImage(image, 0, 0, image.width, image.height);
+
+          var imageData = ctx.getImageData(0, 0, image.width, image.height)
+
+          var length = imageData.data.length;
+          for (var index = 0; index < length; index += 4) {
+            var r = imageData.data[index];
+            var g = imageData.data[index + 1];
+            var b = imageData.data[index + 2];
+            var a = imageData.data[index + 3];
+            //这里可以对 r g b a进行计算（这里的rgba是每个像素块的rgb颜色）
+
+            //绿=》白
+            if (g > 150 && g < 255 && b < 120 && r < 120) {
+              imageData.data[index] = 255;
+              imageData.data[index + 1] = 255;
+              imageData.data[index + 2] = 255;
+              imageData.data[index + 3] = 0;
+            }
+
+            //浅蓝色变白色
+            if (r > 225 && r < 240 && g > 240 && b > g) {
+              imageData.data[index] = 255;
+              imageData.data[index + 1] = 255;
+              imageData.data[index + 2] = 255;
+              imageData.data[index + 3] = 0;
+            }
+            //咖啡色消除
+            if (r > 135 && r < 160 && g > 95 && b < g && b < 75) {
+              imageData.data[index] = 255;
+              imageData.data[index + 1] = 255;
+              imageData.data[index + 2] = 255;
+              imageData.data[index + 3] = 0;
+            }
+
+            /*
+           if (r >g&& b<g && g<120  ) {
+             imageData.data[index] = 255;
+             imageData.data[index + 1] = 255;
+             imageData.data[index + 2] = 255;
+             imageData.data[index + 3] = 0;
+           }
+           if (r >g&& b<g && (g-b)>15 && g < 230&&r<180 ) {
+             imageData.data[index] = 255;
+             imageData.data[index + 1] = 255;
+             imageData.data[index + 2] = 255;
+             imageData.data[index + 3] = 0;
+           }
+ 
+           if ( (g-b)>10 &&(g-b)<20 && (a-g)>10  ) {
+             imageData.data[index] = 255;
+             imageData.data[index + 1] = 255;
+             imageData.data[index + 2] = 255;
+             imageData.data[index + 3] = 0;
+           }*/
+
+            //灰色加强 156 169 178
+            if (r > 150 && r < 160 && g < 170 && g > 160 && b > 175 && b < 185) {
+              //  imageData.data[index] = 0;
+              //  imageData.data[index + 1] = 0;
+              //   imageData.data[index + 2] = 0;
+              //   imageData.data[index + 3] = 1;
+            }
+            //灰色
+            var gray = (r + g + b) / 3;
+            imageData.data[index] = gray;
+            imageData.data[index + 1] = gray;
+            imageData.data[index + 2] = gray;
+
+
+          }
+          // 更新新数据
+          ctx.putImageData(imageData, 0, 0);
+        }
+      }
+      recognizeFile(canvas);
+
+    }
+
+    //window.Tesseract = Tesseract.create({ langPath: "" });
+    function progressUpdate(packet) {
+
+      var log = document.getElementById('log');
+      log.innerHTML = "";//清空之前的数据
+      if (log.firstChild && log.firstChild.status === packet.status) {
+        if ('progress' in packet) {
+          var progress = log.firstChild.querySelector('progress')
+          progress.value = packet.progress
+        }
+      } else {
+
+        var line = document.createElement('div');
+        line.status = packet.status;
+        var status = document.createElement('div')
+        status.className = 'status'
+        status.appendChild(document.createTextNode(packet.status))
+        line.appendChild(status)
+
+        if ('progress' in packet) {
+          var progress = document.createElement('progress')
+          progress.value = packet.progress
+          progress.max = 1
+
+          line.appendChild(progress)
+        }
+
+
+        if (packet.status == 'done') {
+
+
+          var pre = document.createElement('pre')
+          pre.appendChild(document.createTextNode(packet.data.data.text))
+          line.innerHTML = ''
+          line.appendChild(pre)
+
+
+        }
+
+        log.insertBefore(line, log.firstChild)
+      }
+    }
+
+
+
+    async function recognizeFile(cans) {
+
+      document.querySelector("#log").innerHTML = ''
+
+
+      const lang = document.querySelector('#langsel').value
+
+      try {
+
+        const worker = await Tesseract.createWorker({
+          logger: progressUpdate,
+        });
+        var load = await worker.loadLanguage("eng+" + lang);
+
+        await worker.initialize(lang);
+        //   const { data: { text } } = await worker.recognize(cans);//tessedit_pageseg_mode :'11',tessedit_pageseg_mode :'11', 
+        await worker.setParameters({ preserve_interword_spaces: 1, tessedit_char_whitelist: "怕寂寞固執頑皮勇敢大膽坦率淘氣樂天悠閒內斂慢吞吞害羞馬虎冷靜溫和溫順慎重浮躁自大膽小急躁爽朗天真認真獎勵活力回復提升睡眠EXP幫手獎勵能力詳情數量持有上限提升坦率lvSLM123456789技能等級概率樹果食材提升性格固執幫忙速度機率" })//,
+        const data = await worker.recognize(cans);
+        await worker.terminate();
+        // console.log(text);
+        console.log(data);
+        debugger;
+        data.data.lines.forEach(element => {
+          element.text = element.text.replaceAll(" ", "");//半角空格
+          element.text = element.text.replaceAll(" ", "");//全角角空格
+          element.text = element.text.replaceAll("s", "S");//
+          element.text = element.text.replaceAll("m", "M");//
+          element.text = element.text.replaceAll("l", "L");// 
+        });
+        var findSkills = [];
+
+
+        data.data.lines.forEach(element => { 
+          if (findSkills.length < 5) {
+            findSk(element.text, findSkills);
+            findSkEnd(element.text, findSkills);
+          }
+          if (findSkills.length < 5) {
+            findSkEnd(element.text, findSkills);
+          }
+        });
+        var  ids=["sk10", "sk25", "sk50","sk75", "sk100"]
+        for(var i=0;i<findSkills.length;i++){
+          document.getElementById(ids[i]).value=findSkills[i] 
+        }
+        findCa(data.data.text.replaceAll(" ",""));
+      } catch (ex) {
+        console.log(ex)
+      }
+    }
+    function findCa(str) {
+      pmCharacter.forEach(e => {
+        if (str.indexOf(e)>0) {
+          document.getElementById("pmCharacter").value=e  
+          return
+        } 
+      });
+
+    }
+
+
+    ///第一个技能
+    function findSk(str, findSkills) {
+      skills.forEach(e => {
+        if (str.startsWith(e)) {
+          if(findSkills.indexOf(e)<0){
+            findSkills.push(e)
+          }
+          
+        }
+      });
+
+    }
+
+    ///第二个词
+    function findSkEnd(str, findSkills) {
+      skills.forEach(e => {
+        if (str.endsWith(e)) {
+          if(findSkills.indexOf(e)<0){
+            findSkills.push(e)
+          }
+           
+        }
+        if (str.endsWith(e + "\n")) {
+          if(findSkills.indexOf(e)<0){
+            findSkills.push(e)
+          }
+          
+        }
+      });
+    }
+
+    function classCheck(){
+     var sk10= document.getElementById("sk10").value+""
+     var sk25= document.getElementById("sk25").value+""
+     var sk50= document.getElementById("sk50").value+""
+     var sk75= document.getElementById("sk75").value+""
+     var sk100= document.getElementById("sk100").value+""
+     var ca= document.getElementById("pmCharacter").value+""
+     var skillsT1=skillsT1Berry;
+     var caT0=pmCharacterT0;
+     var caTN=pmCharacterNegative ;
+     var skN=[] ;
+    //pmCharacterNegativeBerry=["內斂","溫和", "大膽","膽小","慢吞吞","馬虎","馬虎","冷靜"]
+
+         if(document.getElementById("pmType").value=="樹果型"){
+           skillsT1= skillsT1Berry  
+           caT0=pmCharacterT0Berry;
+           caTN=pmCharacterNegativeBerry;
+            skN=skillsT1BerryBan;
+         }
+         if(document.getElementById("pmType").value=="食材型"){
+          skillsT1= skillsT1Food 
+         }
+         if(document.getElementById("pmType").value=="技能型"){
+          skillsT1=   skillsT1Skill  
+         }
+
+         skillsT1.push(skillsT0)
+
+         //ssr判定
+         if(skillsT0.indexOf(sk10)>-1 && skillsT0.indexOf(sk25)>-1){
+          //性格t0
+          if(caT0.indexOf(ca)>-1){
+            document.getElementById("result").innerHTML="SSR"+ addCheckS(sk50,sk75,sk100, skN,skillsT1 )
+              return 
+            } 
+         }
+        
+        
+ 
+
+         //sr判定
+         if((skillsT0.indexOf(sk10)>-1 || skillsT0.indexOf(sk25)>-1)&&(skillsT1.indexOf(sk10)>-1||skillsT1.indexOf(sk25)>-1)){
+           //排除负面性格
+          if(caTN.indexOf(ca)<0){
+            document.getElementById("result").innerHTML="SR"+ addCheckS(sk50,sk75,sk100, skN ,skillsT1)
+              return 
+           }
+          
+             
+         }
+         //a判定
+         if(skillsT1.indexOf(sk10)>-1&&skillsT1.indexOf(sk25)>-1)
+         {
+            document.getElementById("result").innerHTML="a"+ addCheckAb(ca,caT0,skN)
+              return 
+         }
+         //b判定
+         if(skillsT1.indexOf(sk10)>-1||skillsT1.indexOf(sk25)>-1){
+            document.getElementById("result").innerHTML="b"+ addCheckAb(ca,caT0,skN)
+              return 
+         }
+         document.getElementById("result").innerHTML="C"
+         return 
+    }
+   
+    function addCheckS(sk50,sk75,sk100, skN,skillsT1 ){
+
+      var ban=0+(skN.indexOf(sk50)>-1)+(skN.indexOf(sk75)>-1)+(skN.indexOf(sk100)>-1);
+    if(ban>2){
+       return "---" 
+    }
+    if(ban>1){
+       return "--"
+
+    }
+    if(ban>0){
+       return "-"
+       
+    }
+      if((skillsT1.indexOf(sk50)>-1)&&(skillsT1.indexOf(sk75)>-1)&&(skillsT1.indexOf(sk100)>-1)){
+
+        return "+++"
+      } 
+      if((skillsT1.indexOf(sk50)>-1)&&(skillsT1.indexOf(sk75)>-1)){
+
+        return "++"
+     } 
+if((skillsT1.indexOf(sk50)>-1)){
+
+  return "+"
+} 
+      return ""
+    }
+    function addCheckAb(ca,caT0,skN){
+      if((skN.indexOf(sk50)>-1)){
+
+return "-"
+} 
+if((caT0.indexOf(sk50)>-1)){
+
+return "++"
+} 
+          return ""
+    }
+
+  </script>
+  <style>
+    #log>div {
+      color: #313131;
+      border-top: 1px solid #dadada;
+      padding: 9px;
+      display: flex;
+    }
+
+    #log>div:first-child {
+      border: 0;
+    }
+
+
+    .status {
+      min-width: 250px;
+    }
+
+    #log {
+      border: 1px solid #dadada;
+      padding: 10px;
+      margin-top: 20px;
+      min-height: 100px;
+    }
+
+    body {
+      font-family: sans-serif;
+      margin: 30px;
+    }
+
+    progress {
+      display: block;
+      width: 100%;
+      transition: opacity 0.5s linear;
+    }
+
+    progress[value="1"] {
+      opacity: 0.5;
+    }
+  </style>
+</body>
+
+</html>
