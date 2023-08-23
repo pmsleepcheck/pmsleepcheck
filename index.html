@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/> 
 <body>
+  <div class="main">
   评级解释：
   https://nga.178.com/read.php?tid=37408232
   <div>類型<select id="pmType"> 
@@ -28,7 +29,7 @@
 </select> 
 <button onclick="classCheck()">判定等级</button>
 <h1 id="result"></h1>
-
+</div>
 <br/>
 </div>
 <div>识别例图</div>
@@ -36,14 +37,17 @@
   <img src="simple.jpg" id="sample" height="400" />
 
   </div>
+
   <canvas id="canvas" height="400"></canvas>
-  <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
-  <select id="langsel">
-    <option value='chi_tra'> Traditional Chinese </option>
-  </select>
   
+  <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
+  <div> <select id="langsel">
+    <option value='chi_tra'> Traditional Chinese </option>
+  </select></div>
+ 
+  <div > <input type="file"></div>
   <!--<button onclick="recognizeFile(document.querySelector('#sample'))">Sample Image</button>-->
-  <input type="file">
+ 
   <div id="log"></div>
   <script>
     var pmType=["食材型","樹果型","技能型"]
@@ -435,6 +439,12 @@ return "++"
 
   </script>
   <style>
+      @media screen and (max-width: 480px) {
+      .main {
+        width: 100%;
+      }
+    }
+
     #log>div {
       color: #313131;
       border-top: 1px solid #dadada;
@@ -458,9 +468,10 @@ return "++"
       min-height: 100px;
     }
 
-    body {
-      font-family: sans-serif;
-      margin: 30px;
+      body {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
     }
 
     progress {
