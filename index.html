@@ -373,7 +373,7 @@ var skillsT1BerryBan = ["食材機率提升M", "食材機率提升S"]
  
 
          //sr判定
-         if((skillsT0.indexOf(sk10)>-1 || skillsT0.indexOf(sk25)>-1)&&(skillsT1.indexOf(sk10)>-1||skillsT1.indexOf(sk25)>-1)){
+         if((skillsT0.indexOf(sk10)>-1 && skillsT1.indexOf(sk25)>-1)||(skillsT1.indexOf(sk10)>-1&&skillsT0.indexOf(sk25)>-1)){
            //排除负面性格
           if(caTN.indexOf(ca)<0){
             document.getElementById("result").innerHTML="SR"+ addCheckS(sk50,sk75,sk100, skN ,skillsT1)
