@@ -32,9 +32,7 @@
 </div>
 <br/>
 </div>
-<div>识别例图</div>
-  
-  <img src="simple.jpg" id="sample" height="400" />
+
 
   </div>
 
@@ -49,7 +47,10 @@
  
   <div > <input type="file" accept="image/*"></div>
   <!--<button onclick="recognizeFile(document.querySelector('#sample'))">Sample Image</button>-->
- 
+  <div id="log"></div>
+  <div>识别例图</div>
+  
+  <img src="simple.jpg" id="sample" height="400" />
   <div id="log"></div>
   <script>
     var pmType=["食材型","樹果型","技能型"]
@@ -131,7 +132,7 @@ var requestOptions = {
   body: formdata,
   redirect: 'follow'
 };
-
+document.querySelector("#log").innerHTML="识别中"
 fetch("https://api.ocr.space/parse/image", requestOptions)
   .then(response => response.text())
   .then(result => GetData( JSON.parse(result)))
@@ -150,10 +151,7 @@ fetch("https://api.ocr.space/parse/image", requestOptions)
 
 
     async function GetData(data) {
-
-      document.querySelector("#log").innerHTML = ''
-
-
+      document.querySelector("#log").innerHTML="识别完成" 
       const lang = document.querySelector('#langsel').value
 
       try {
