@@ -40,12 +40,14 @@
 
   <canvas id="canvas" height="400"></canvas>
   
-  <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
-  <div> <select id="langsel">
-    <option value='chi_tra'> Traditional Chinese </option>
-  </select></div>
  
-  <div > <input type="file"></div>
+  <div> 
+    <select id="langsel">
+    <option value='chi_tra'> 繁体中文 </option>
+  </select>
+</div>
+ 
+  <div > <input type="file" accept="image/*"></div>
   <!--<button onclick="recognizeFile(document.querySelector('#sample'))">Sample Image</button>-->
  
   <div id="log"></div>
@@ -105,142 +107,49 @@ var skillsT1BerryBan = ["食材機率提升M", "食材機率提升S"]
       if (files.length > 0) {
         const file = files[0]; // First file
         console.log(file);
-
-        const image = new Image();
-        image.src = URL.createObjectURL(file);
-
-        image.onload = function (event) {
-          // console.log(event, this);
-          URL.revokeObjectURL(this.src);
-
-          canvas.width = image.width;
-          canvas.height = image.height;
-
-          ctx.drawImage(image, 0, 0, image.width, image.height);
-
-          var imageData = ctx.getImageData(0, 0, image.width, image.height)
-
-          var length = imageData.data.length;
-          for (var index = 0; index < length; index += 4) {
-            var r = imageData.data[index];
-            var g = imageData.data[index + 1];
-            var b = imageData.data[index + 2];
-            var a = imageData.data[index + 3];
-            //这里可以对 r g b a进行计算（这里的rgba是每个像素块的rgb颜色）
-
-            //绿=》白
-            if (g > 150 && g < 255 && b < 120 && r < 120) {
-              imageData.data[index] = 255;
-              imageData.data[index + 1] = 255;
-              imageData.data[index + 2] = 255;
-              imageData.data[index + 3] = 0;
-            }
-
-            //浅蓝色变白色
-            if (r > 225 && r < 240 && g > 240 && b > g) {
-              imageData.data[index] = 255;
-              imageData.data[index + 1] = 255;
-              imageData.data[index + 2] = 255;
-              imageData.data[index + 3] = 0;
-            }
-            //咖啡色消除
-            if (r > 135 && r < 160 && g > 95 && b < g && b < 75) {
-              imageData.data[index] = 255;
-              imageData.data[index + 1] = 255;
-              imageData.data[index + 2] = 255;
-              imageData.data[index + 3] = 0;
-            }
-
-            /*
-           if (r >g&& b<g && g<120  ) {
-             imageData.data[index] = 255;
-             imageData.data[index + 1] = 255;
-             imageData.data[index + 2] = 255;
-             imageData.data[index + 3] = 0;
-           }
-           if (r >g&& b<g && (g-b)>15 && g < 230&&r<180 ) {
-             imageData.data[index] = 255;
-             imageData.data[index + 1] = 255;
-             imageData.data[index + 2] = 255;
-             imageData.data[index + 3] = 0;
-           }
- 
-           if ( (g-b)>10 &&(g-b)<20 && (a-g)>10  ) {
-             imageData.data[index] = 255;
-             imageData.data[index + 1] = 255;
-             imageData.data[index + 2] = 255;
-             imageData.data[index + 3] = 0;
-           }*/
-
-            //灰色加强 156 169 178
-            if (r > 150 && r < 160 && g < 170 && g > 160 && b > 175 && b < 185) {
-              //  imageData.data[index] = 0;
-              //  imageData.data[index + 1] = 0;
-              //   imageData.data[index + 2] = 0;
-              //   imageData.data[index + 3] = 1;
-            }
-            //灰色
-            var gray = (r + g + b) / 3;
-            imageData.data[index] = gray;
-            imageData.data[index + 1] = gray;
-            imageData.data[index + 2] = gray;
-
-
-          }
-          // 更新新数据
-          ctx.putImageData(imageData, 0, 0);
+        
+        sendToFreeOcr(file)
         }
+      }  
+
+
+  function    sendToFreeOcr(file){
+        var myHeaders = new Headers();
+myHeaders.append("apikey", "helloworld");
+
+var formdata = new FormData();
+formdata.append("language", "cht");
+formdata.append("isOverlayRequired", "false");
+formdata.append("iscreatesearchablepdf", "false");
+formdata.append("issearchablepdfhidetextlayer", "false");
+formdata.append("file", file, "[PROXY]");
+formdata.append("filetype", file.name.split('.').pop());
+
+var requestOptions = {
+  method: 'POST',
+  headers: myHeaders,
+  body: formdata,
+  redirect: 'follow'
+};
+
+fetch("https://api.ocr.space/parse/image", requestOptions)
+  .then(response => response.text())
+  .then(result => GetData( JSON.parse(result)))
+  .catch(error => OcrNotWork( error));
+
+
       }
-      recognizeFile(canvas);
 
-    }
-
+      function OcrNotWork(error){
+        console.log(error)
+        document.querySelector("#log").innerHTML=error+""
+      }
     //window.Tesseract = Tesseract.create({ langPath: "" });
-    function progressUpdate(packet) {
-
-      var log = document.getElementById('log');
-      log.innerHTML = "";//清空之前的数据
-      if (log.firstChild && log.firstChild.status === packet.status) {
-        if ('progress' in packet) {
-          var progress = log.firstChild.querySelector('progress')
-          progress.value = packet.progress
-        }
-      } else {
-
-        var line = document.createElement('div');
-        line.status = packet.status;
-        var status = document.createElement('div')
-        status.className = 'status'
-        status.appendChild(document.createTextNode(packet.status))
-        line.appendChild(status)
-
-        if ('progress' in packet) {
-          var progress = document.createElement('progress')
-          progress.value = packet.progress
-          progress.max = 1
-
-          line.appendChild(progress)
-        }
-
-
-        if (packet.status == 'done') {
-
-
-          var pre = document.createElement('pre')
-          pre.appendChild(document.createTextNode(packet.data.data.text))
-          line.innerHTML = ''
-          line.appendChild(pre)
-
-
-        }
-
-        log.insertBefore(line, log.firstChild)
-      }
-    }
+     
 
 
 
-    async function recognizeFile(cans) {
+    async function GetData(data) {
 
       document.querySelector("#log").innerHTML = ''
 
@@ -249,43 +158,39 @@ var skillsT1BerryBan = ["食材機率提升M", "食材機率提升S"]
 
       try {
 
-        const worker = await Tesseract.createWorker({
-          logger: progressUpdate,
-        });
-        var load = await worker.loadLanguage("eng+" + lang);
-
-        await worker.initialize(lang);
-        //   const { data: { text } } = await worker.recognize(cans);//tessedit_pageseg_mode :'11',tessedit_pageseg_mode :'11', 
-        await worker.setParameters({ preserve_interword_spaces: 1, tessedit_char_whitelist: "怕寂寞固執頑皮勇敢大膽坦率淘氣樂天悠閒內斂慢吞吞害羞馬虎冷靜溫和溫順慎重勤奮浮躁自大膽小急躁爽朗天真認真獎勵活力回復提升睡眠EXP幫手獎勵能力詳情數量持有上限提升坦率SLM技能等級概率樹果食材提升性格固執幫忙速度機率" })//,
-        const data = await worker.recognize(cans);
-        await worker.terminate();
+       
+       
+       // await worker.setParameters({ preserve_interword_spaces: 1, tessedit_char_whitelist: "怕寂寞固執頑皮勇敢大膽坦率淘氣樂天悠閒內斂慢吞吞害羞馬虎冷靜溫和溫順慎重勤奮浮躁自大膽小急躁爽朗天真認真獎勵活力回復提升睡眠EXP幫手獎勵能力詳情數量持有上限提升坦率SLM技能等級概率樹果食材提升性格固執幫忙速度機率" })//,
+       
         // console.log(text);
         console.log(data);
-        debugger;
-        data.data.lines.forEach(element => {
-          element.text = element.text.replaceAll(" ", "");//半角空格
-          element.text = element.text.replaceAll(" ", "");//全角角空格
-          element.text = element.text.replaceAll("s", "S");//
-          element.text = element.text.replaceAll("m", "M");//
-          element.text = element.text.replaceAll("l", "L");// 
+        
+        var lines = data.ParsedResults[0].ParsedText.split("\r\n")
+
+        lines.forEach(element => {
+          element = element.replaceAll(" ", "");//半角空格
+          element = element.replaceAll(" ", "");//全角角空格
+          element = element.replaceAll("s", "S");//
+          element = element.replaceAll("m", "M");//
+          element = element.replaceAll("l", "L");// 
         });
         var findSkills = [];
 
 
-        data.data.lines.forEach(element => { 
+        lines.forEach(element => { 
           if (findSkills.length < 5) {
-            findSk(element.text, findSkills);
-            findSkEnd(element.text, findSkills);
+            findSk(element, findSkills);
+            findSkEnd(element, findSkills);
           }
           if (findSkills.length < 5) {
-            findSkEnd(element.text, findSkills);
+            findSkEnd(element, findSkills);
           }
         });
         var  ids=["sk10", "sk25", "sk50","sk75", "sk100"]
         for(var i=0;i<findSkills.length;i++){
           document.getElementById(ids[i]).value=findSkills[i] 
         }
-        findCa(data.data.text.replaceAll(" ",""));
+        findCa(data.ParsedResults[0].ParsedText.replaceAll(" ",""));
       } catch (ex) {
         console.log(ex)
       }
@@ -444,45 +349,7 @@ return "++"
         width: 100%;
       }
     }
-
-    #log>div {
-      color: #313131;
-      border-top: 1px solid #dadada;
-      padding: 9px;
-      display: flex;
-    }
-
-    #log>div:first-child {
-      border: 0;
-    }
-
-
-    .status {
-      min-width: 100px;
-    }
-
-    #log {
-      border: 1px solid #dadada;
-      padding: 10px;
-      margin-top: 20px;
-      min-height: 100px;
-    }
-
-      body {
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    progress {
-      display: block;
-      width: 100%;
-      transition: opacity 0.5s linear;
-    }
-
-    progress[value="1"] {
-      opacity: 0.5;
-    }
+ 
   </style>
 </body>
 
